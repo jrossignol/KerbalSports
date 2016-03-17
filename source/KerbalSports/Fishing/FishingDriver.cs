@@ -37,7 +37,9 @@ namespace Fishing
         const float minAngularVelocity = 20.0f * (float)Math.PI / 180.0f;
         const float maxZoomVelocity = 5.0f;
         const double ctrlDeltaTime = 0.1;
-        const double castTime = 1.0;
+        const double castDelay = 1.2;
+        const double castDuration = 0.4;
+        const double castTime = 2.0;
         const float reelingSpeed = 0.2f;
         const float hookedReelingSpeed = 0.12f;
         const float rodDelta = 0.040f;
@@ -56,6 +58,9 @@ namespace Fishing
         float bobDistance;
         float fishHookDistance;
         float rodLeeway;
+        float loopingClipStart;
+        float  loopingClipTime;
+        string loopingClipName;
 
         // GUI stuff
         bool texturesLoaded = false;
@@ -71,6 +76,9 @@ namespace Fishing
 
         // Animations
         KerbalAnimationClip castingClip;
+        KerbalAnimationClip reelingClip;
+        KerbalAnimationClip hookedClip;
+        KerbalAnimationClip caughtClip;
 
         // Camera stuff
         const float cameraHeight = 0.35f;
@@ -83,7 +91,10 @@ namespace Fishing
 
         void Awake()
         {
-            castingClip = new KerbalAnimationClip("Fishing/anim/casting");
+            castingClip = new KerbalAnimationClip("KerbalSports/anim/fishingCasting");
+            reelingClip = new KerbalAnimationClip("KerbalSports/anim/fishingReeling");
+            hookedClip = new KerbalAnimationClip("KerbalSports/anim/fishingHooked");
+            caughtClip = new KerbalAnimationClip("KerbalSports/anim/fishingCaught");
         }
 
         void Start()
@@ -138,6 +149,9 @@ namespace Fishing
             // Initialize animations
             animation = eva.GetComponent<Animation>();
             castingClip.Initialize(animation, eva.transform);
+            reelingClip.Initialize(animation, eva.transform);
+            hookedClip.Initialize(animation, eva.transform);
+            caughtClip.Initialize(animation, eva.transform);
 
             // Close the window that caused us to open
             UIPartActionWindow paw = UnityEngine.Object.FindObjectOfType<UIPartActionWindow>();
@@ -256,7 +270,7 @@ namespace Fishing
                         float rodDistanceTop = (distanceHeight - 24f) * (0.5f + rodLeeway - maxRodLeeway - bobDistance) + distanceCenter;
                         if (rodDistanceTop < distanceTop + 2)
                         {
-                            rodWindowHeight -= rodDistanceTop - (distanceTop + 2);
+                            rodWindowHeight -= (distanceTop + 2) - rodDistanceTop;
                             rodDistanceTop = distanceTop + 2;
                         }
                         else if ((rodDistanceTop + rodWindowHeight) > (distanceTop + distanceHeight - 2))
@@ -304,12 +318,12 @@ namespace Fishing
 
         void LoadGuiInfo()
         {
-            windowTex = GameDatabase.Instance.GetTexture("Fishing/images/window", false);
-            rodWindowTex = GameDatabase.Instance.GetTexture("Fishing/images/rodWindow", false);
-            ctrlSmashTex = GameDatabase.Instance.GetTexture("Fishing/images/ctrlSmash", false);
-            fishLeftTex = GameDatabase.Instance.GetTexture("Fishing/images/fishL", false);
-            fishRightTex = GameDatabase.Instance.GetTexture("Fishing/images/fishR", false);
-            bobTex = GameDatabase.Instance.GetTexture("Fishing/images/bob", false);
+            windowTex = GameDatabase.Instance.GetTexture("KerbalSports/images/window", false);
+            rodWindowTex = GameDatabase.Instance.GetTexture("KerbalSports/images/rodWindow", false);
+            ctrlSmashTex = GameDatabase.Instance.GetTexture("KerbalSports/images/ctrlSmash", false);
+            fishLeftTex = GameDatabase.Instance.GetTexture("KerbalSports/images/fishL", false);
+            fishRightTex = GameDatabase.Instance.GetTexture("KerbalSports/images/fishR", false);
+            bobTex = GameDatabase.Instance.GetTexture("KerbalSports/images/bob", false);
             textStyle = new GUIStyle(HighLogic.Skin.label)
             {
                 normal =
@@ -353,6 +367,42 @@ namespace Fishing
                     SetState(FishingState.Idle);
                 }
             }
+
+            if (fishingState == FishingState.Hooked)
+            {
+                if (!animation.isPlaying)
+                {
+                    animation.Play("fishingHooked");
+                }
+
+                AnimationState animState = animation["fishingHooked"];
+                animState.time = (rodLeeway / maxRodLeeway) / animState.length;
+            }
+
+            if (fishingState == FishingState.Caught)
+            {
+                if (!animation.isPlaying)
+                {
+                    SetState(FishingState.Idle);
+                }
+            }
+
+            // Can turn looping on for a clip unless the clip is created through Unity, and we hacked it using Kerbal Animation Studio instead. :(
+            if (!string.IsNullOrEmpty(loopingClipName))
+            {
+                while (loopingClipStart + loopingClipTime < Time.time)
+                {
+                    loopingClipStart += loopingClipTime;
+                }
+
+                if (!animation.isPlaying)
+                {
+                    animation.Play(loopingClipName);
+                }
+
+                AnimationState animState = animation[loopingClipName];
+                animState.time = Time.time - loopingClipStart;
+            }
         }
 
         void FixedUpdate()
@@ -362,10 +412,9 @@ namespace Fishing
             switch (fishingState)
             {
                 case FishingState.Casting:
-                    bobDistance = (float)((Time.fixedTime - stateStartTime) / castTime);
-                    if (bobDistance >= 1.0f)
+                    bobDistance = Mathf.Clamp((float)((Time.fixedTime - stateStartTime - castDelay) / castDuration), 0.0f, 1.0f);
+                    if (Time.fixedTime - stateStartTime >= castTime)
                     {
-                        bobDistance = 1.0f;
                         SetState(FishingState.Reeling);
                     }
                     break;
@@ -426,12 +475,12 @@ namespace Fishing
                     if (bobDistance > 1.0f)
                     {
                         ScreenMessages.PostScreenMessage("The fish got away.", 5, ScreenMessageStyle.UPPER_CENTER);
-                        SetState(FishingState.Reeling);
+                        SetState(FishingState.Idle);
                     }
                     else if (bobDistance < 0.0f)
                     {
                         ScreenMessages.PostScreenMessage("You got a fish!", 5, ScreenMessageStyle.UPPER_CENTER);
-                        SetState(FishingState.Idle);
+                        SetState(FishingState.Caught);
                     }
 
                     // Finally, let the fish update
@@ -447,6 +496,9 @@ namespace Fishing
         void SetState(FishingState newState)
         {
             Debug.Log("set fishing state to " + newState);
+
+            // Remove any looping clips
+            loopingClipName = null;
 
             // Enable/disable stuff
             if (newState == FishingState.StartFishing)
@@ -505,17 +557,37 @@ namespace Fishing
             if (newState == FishingState.Idle)
             {
                 KerbalEVA eva = evaVessel.GetComponent<KerbalEVA>();
+                animation.Stop();
                 animation.Play(eva.Animations.idle.animationName);
             }
-
             // Play the casting animation
-            if (newState == FishingState.Casting)
+            else if (newState == FishingState.Casting)
             {
                 // Set the casting animation
+                animation.Stop();
                 animation.Play("fishingCasting");
 
                 // Start at the zero distance when casting
                 bobDistance = 0.0f;
+            }
+            // Reeling animation
+            else if (newState == FishingState.Reeling)
+            {
+                // Set the casting animation
+                loopingClipStart = Time.time;
+                loopingClipTime = 4.0f;
+                loopingClipName = "fishingReeling";
+                animation.Stop();
+            }
+            // Hooked animation
+            else if (newState == FishingState.Hooked)
+            {
+                animation.Stop();
+            }
+            else if (newState == FishingState.Caught)
+            {
+                animation.Stop();
+                animation.Play("fishingCaught");
             }
 
             // Decide if a fish will be caught on this cast, and when

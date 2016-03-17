@@ -96,7 +96,6 @@ namespace Fishing
             // Give it a mesh renderer
             MeshRenderer renderer = gameObject.AddComponent<MeshRenderer>();
             renderer.material.shader = Shader.Find("KSP/Diffuse");
-            Debug.Log("    shader = " + renderer.material.shader);
             Texture2D tex = new Texture2D(1, 1);
             tex.SetPixel(0, 0, rodColor);
             tex.Apply();

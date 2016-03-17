@@ -55,13 +55,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Fish.cs" />
-    <Compile Include="FishingLoader.cs" />
-    <Compile Include="FishingDriver.cs" />
-    <Compile Include="FishingPole.cs" />
-    <Compile Include="FishingScenario.cs" />
+    <Compile Include="Fishing\Fish.cs" />
+    <Compile Include="Fishing\FishingLoader.cs" />
+    <Compile Include="Fishing\FishingDriver.cs" />
+    <Compile Include="Fishing\FishingPole.cs" />
+    <Compile Include="Fishing\FishingScenario.cs" />
     <Compile Include="KerbalAnimation\KerbalAnimationClip.cs" />
-    <Compile Include="ModuleFishing.cs" />
+    <Compile Include="Fishing\ModuleFishing.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util.cs" />
   </ItemGroup>
