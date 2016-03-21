@@ -10,18 +10,19 @@ namespace Fishing
 {
     public class ModuleFishing : PartModule
     {
-        [KSPField(guiName="Biggest Fish Caught", guiActive=true, guiFormat="N1", guiUnits="kg")]
+        [KSPField(guiName="Fish Type in Area", guiActive=true)]
+        string fishType;
+        [KSPField(guiName = "Biggest Fish Caught", guiActive = true, guiFormat = "N1", guiUnits = "kg")]
         double fishRecord = 100;
         ProtoCrewMember pcm;
+        bool showing = true;
 
         public override void OnStart(PartModule.StartState state)
         {
-            Debug.Log("ModuleFishing.OnStart(" + state + ")");
             pcm = part.protoModuleCrew.First();
-            Debug.Log("    crew = " + pcm);
         }
 
-        [KSPEvent(active=true, guiActive=true, guiName="Start Fishing", name="fish")]
+        [KSPEvent(active = true, guiActive = true, guiName = "Start Fishing", name = "StartFishing")]
         void StartFishing()
         {
             FishingDriver fishingDriver = PlanetariumCamera.Camera.gameObject.GetComponent<FishingDriver>();
@@ -30,6 +31,53 @@ namespace Fishing
                 fishingDriver = PlanetariumCamera.Camera.gameObject.AddComponent<FishingDriver>();
             }
             fishingDriver.StartFishing(part.vessel, pcm);
+        }
+
+        public override void OnUpdate()
+        {
+            if (vessel.situation != Vessel.Situations.LANDED || !vessel.mainBody.ocean || vessel.altitude > 250)
+            {
+                SetShowing(false);
+            }
+            // Perform the more expensive check
+            else
+            {
+                // Check 5 meters forward for water
+                Vector3 checkPosition = vessel.transform.localPosition + vessel.transform.forward * 5.0f;
+                double latitude = vessel.mainBody.GetLatitude(checkPosition);
+                double longitude = vessel.mainBody.GetLongitude(checkPosition);
+                double height = Util.TerrainHeight(vessel.mainBody, latitude, longitude);
+
+                int adminLevel = (int)Math.Round(ScenarioUpgradeableFacilities.GetFacilityLevel(SpaceCenterFacility.Administration) *
+                    ScenarioUpgradeableFacilities.GetFacilityLevelCount(SpaceCenterFacility.Administration)) + 1;
+
+                if (height <= 0.0 || adminLevel == 3 && Util.adminPool.Contains(new Vector2((float)latitude, (float)longitude)))
+                {
+                    SetShowing(true);
+
+                    // Set the fish type found at the current location
+                    Fish.FishType ft = Fish.GetFishType(vessel.mainBody, vessel.latitude, vessel.longitude);
+                    fishType = ft == Fish.FishType.DeepOcean ? "Deep Ocean" : ft.ToString();
+                }
+                else
+                {
+                    SetShowing(false);
+                }
+            }
+
+        }
+
+        protected void SetShowing(bool showing)
+        {
+            if (this.showing != showing)
+            {
+                this.showing = showing;
+
+                // Show/hide our fields
+                Fields["fishType"].guiActive = showing;
+                Fields["fishRecord"].guiActive = showing;
+                Events["StartFishing"].guiActive = showing;
+            }
         }
     }
 }

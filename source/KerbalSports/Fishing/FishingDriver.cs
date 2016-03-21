@@ -33,20 +33,17 @@ namespace Fishing
         FishingPole fishingPole;
         bool navballToggled;
 
-        const float defaultCameraZoomTime = 2.0f;
-        const float minAngularVelocity = 20.0f * (float)Math.PI / 180.0f;
-        const float maxZoomVelocity = 5.0f;
         const double ctrlDeltaTime = 0.1;
         const double castDelay = 1.2;
         const double castDuration = 0.4;
         const double castTime = 2.0;
-        const float reelingSpeed = 0.2f;
-        const float hookedReelingSpeed = 0.12f;
         const float rodDelta = 0.040f;
         const float rodWindowRatio = 0.1f;
         const float distWindowRatio = 0.1f;
-        const float fishCatchSpeed = 0.075f;
-        const float fishEscapeSpeed = 0.100f;
+        const float reelingSpeed = 0.2f;
+        const float defaultHookedReelingSpeed = 0.12f;
+        const float defaultFishCatchSpeed = 0.100f;
+        const float defaultFishEscapeSpeed = 0.100f;
         const float maxRodLeeway = 0.1f;
 
         // State and time
@@ -59,8 +56,12 @@ namespace Fishing
         float fishHookDistance;
         float rodLeeway;
         float loopingClipStart;
-        float  loopingClipTime;
+        float loopingClipTime;
         string loopingClipName;
+        double bodyDifficulty;
+        float hookedReelingSpeed;
+        float fishCatchSpeed;
+        float fishEscapeSpeed;
 
         // GUI stuff
         bool texturesLoaded = false;
@@ -88,6 +89,9 @@ namespace Fishing
         float startDist;
         float startHeight;
         float cameraZoomTime;
+        const float defaultCameraZoomTime = 2.0f;
+        const float minAngularVelocity = 20.0f * (float)Math.PI / 180.0f;
+        const float maxZoomVelocity = 5.0f;
 
         void Awake()
         {
@@ -124,6 +128,7 @@ namespace Fishing
         void GameSceneSwitchRequested(GameEvents.FromToAction<GameScenes, GameScenes> fta)
         {
             SetState(FishingState.NotFishing);
+            Destroy(this);
         }
 
         /// <summary>
@@ -138,7 +143,6 @@ namespace Fishing
 
             // Get the kerbal EVA
             KerbalEVA eva = evaVessel.GetComponent<KerbalEVA>();
-            Util.DumpGameObject(eva.gameObject);
 
             // Create the fishing pole object
             GameObject poleObject = new GameObject("fishingPole");
@@ -159,6 +163,13 @@ namespace Fishing
             {
                 paw.isValid = false;
             }
+
+            // Determine the body difficulty
+            double gravityModifier = evaVessel.mainBody.gravParameter / (evaVessel.mainBody.Radius * evaVessel.mainBody.Radius) / 9.81;
+            double scienceModifier = evaVessel.mainBody.scienceValues.SplashedDataValue / 10.0f;
+            bodyDifficulty = gravityModifier + scienceModifier;
+            hookedReelingSpeed = defaultHookedReelingSpeed / (float)bodyDifficulty;
+            Debug.Log("Body difficulty for " + evaVessel.mainBody.name + " = " + bodyDifficulty);
         }
 
         void OnGUI()
@@ -368,6 +379,14 @@ namespace Fishing
                 }
             }
 
+            if (fishingState == FishingState.Caught)
+            {
+                if (!animation.isPlaying)
+                {
+                    SetState(FishingState.Idle);
+                }
+            }
+
             if (fishingState == FishingState.Hooked)
             {
                 if (!animation.isPlaying)
@@ -376,15 +395,8 @@ namespace Fishing
                 }
 
                 AnimationState animState = animation["fishingHooked"];
+                animState.speed = 0.00000001f;
                 animState.time = (rodLeeway / maxRodLeeway) / animState.length;
-            }
-
-            if (fishingState == FishingState.Caught)
-            {
-                if (!animation.isPlaying)
-                {
-                    SetState(FishingState.Idle);
-                }
             }
 
             // Can turn looping on for a clip unless the clip is created through Unity, and we hacked it using Kerbal Animation Studio instead. :(
@@ -420,7 +432,7 @@ namespace Fishing
                     break;
                 case FishingState.Reeling:
                     // Reel in the bob
-                    if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.LeftShift))
+                    if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
                     {
                         bobDistance -= reelingSpeed * Time.fixedDeltaTime;
                     }
@@ -428,7 +440,10 @@ namespace Fishing
                     // Has a fish been hooked?
                     if (bobDistance < fishHookDistance)
                     {
-                        currentFish = new Fish(evaVessel.mainBody);
+                        currentFish = new Fish(evaVessel, bodyDifficulty);
+                        fishCatchSpeed = (float)(defaultFishCatchSpeed / currentFish.difficulty);
+                        fishEscapeSpeed = (float)(defaultFishEscapeSpeed * currentFish.difficulty);
+
                         SetState(FishingState.Hooked);
                     }
                     else if (bobDistance <= 0)
@@ -443,7 +458,7 @@ namespace Fishing
                     if (Math.Abs(currentFish.position - rodPosition) < rodWindowRatio)
                     {
                         // Leeway only builds if we're not holding shift
-                        if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.LeftShift)))
+                        if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
                         {
                             rodLeeway = Math.Min(rodLeeway + fishCatchSpeed * Time.fixedDeltaTime, maxRodLeeway);
                         }
@@ -459,7 +474,7 @@ namespace Fishing
                     }
 
                     // Reel in the bob
-                    if ((Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.LeftShift)) && rodLeeway > 0.0)
+                    if ((Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) && rodLeeway > 0.0)
                     {
                         // Reel in as much as we can
                         float dist = hookedReelingSpeed * Time.fixedDeltaTime;
@@ -479,7 +494,7 @@ namespace Fishing
                     }
                     else if (bobDistance < 0.0f)
                     {
-                        ScreenMessages.PostScreenMessage("You got a fish!", 5, ScreenMessageStyle.UPPER_CENTER);
+                        ScreenMessages.PostScreenMessage("You caught a " + currentFish.weight.ToString("N1") + " kg fish!", 5, ScreenMessageStyle.UPPER_CENTER);
                         SetState(FishingState.Caught);
                     }
 
@@ -525,6 +540,14 @@ namespace Fishing
                 {
                     NavBallToggle.Instance.panel.Expand();
                 }
+
+                // Remove the fishing pole
+                Destroy(fishingPole);
+
+                // Set the animation back to the idle one
+                KerbalEVA eva = evaVessel.GetComponent<KerbalEVA>();
+                animation.Stop();
+                animation.Play(eva.Animations.idle.animationName);
             }
 
             // Calculate the camera start position
@@ -596,7 +619,7 @@ namespace Fishing
                 double catchChance = (FishingScenario.Instance.failedAttempts + 1) / 6.0;
                 if (catchChance >= 1.0 || rand.NextDouble() < catchChance)
                 {
-                    fishHookDistance = (float)rand.NextDouble() * 0.65f + 0.25f;
+                    fishHookDistance = (float)rand.NextDouble() * 0.55f + 0.25f;
                 }
                 else
                 {
@@ -610,6 +633,12 @@ namespace Fishing
                 rodPosition = 0.5f;
                 rodLeeway = 0.0f;
                 fishHookDistance = -1.0f;
+            }
+
+            // Caught a fish, record it
+            if (newState == FishingState.Caught)
+            {
+                FishingScenario.Instance.CaughtFish(kerbalFisher, currentFish);
             }
 
             stateStartTime = Time.fixedTime;

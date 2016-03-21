@@ -117,6 +117,11 @@ namespace Fishing
         {
         }
 
+        void OnDestroy()
+        {
+            Destroy(parent);
+        }
+
         void FixedUpdate()
         {
             parent.transform.localPosition = referenceTransform.position;

@@ -27,5 +27,10 @@ namespace Fishing
         {
             base.OnLoad(node);
         }
+
+        public void CaughtFish(ProtoCrewMember pcm, Fish fish)
+        {
+
+        }
     }
 }
