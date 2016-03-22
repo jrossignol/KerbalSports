@@ -60,10 +60,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Fishing\Fish.cs" />
+    <Compile Include="Fishing\FishingData.cs" />
     <Compile Include="Fishing\FishingLoader.cs" />
     <Compile Include="Fishing\FishingDriver.cs" />
     <Compile Include="Fishing\FishingPole.cs" />
-    <Compile Include="Fishing\FishingScenario.cs" />
+    <Compile Include="SportsScenario.cs" />
     <Compile Include="KerbalAnimation\KerbalAnimationClip.cs" />
     <Compile Include="Fishing\ModuleFishing.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

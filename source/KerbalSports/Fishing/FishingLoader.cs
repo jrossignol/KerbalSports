@@ -6,7 +6,7 @@ using System.Text;
 using UnityEngine;
 using KSP;
 
-namespace Fishing
+namespace KerbalSports.Fishing
 {
     [KSPAddon(KSPAddon.Startup.MainMenu, true)]
     public class FishingLoader : MonoBehaviour

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 using UnityEngine;
 
-namespace Fishing.KerbalAnimation
+namespace KerbalSports.KerbalAnimation
 {
     /// <summary>
     /// Included from https://github.com/HappyFaceIndustries/KerbalAnimationSuite/blob/22920a3edc4e08d9ca4abd822174f5d7a5f0faba/KerbalAnimationSuite/API/KerbalAnimationClip.cs.

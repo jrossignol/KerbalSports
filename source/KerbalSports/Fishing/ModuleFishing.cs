@@ -6,16 +6,20 @@ using System.Text;
 using UnityEngine;
 using KSP;
 
-namespace Fishing
+namespace KerbalSports.Fishing
 {
     public class ModuleFishing : PartModule
     {
-        [KSPField(guiName="Fish Type in Area", guiActive=true)]
+        [KSPField(guiName="Type of Fish in Region", guiActive=true)]
         string fishType;
         [KSPField(guiName = "Biggest Fish Caught", guiActive = true, guiFormat = "N1", guiUnits = "kg")]
-        double fishRecord = 100;
+        public double fishRecord = 0.0;
+        [KSPField(guiName = "Number of Fish Caught", guiActive = true, guiFormat = "N")]
+        public int fishCount = 0;
         ProtoCrewMember pcm;
         bool showing = true;
+
+        FishingData fishingData;
 
         public override void OnStart(PartModule.StartState state)
         {
@@ -35,6 +39,14 @@ namespace Fishing
 
         public override void OnUpdate()
         {
+            // Need to do this on update, as the part module gets loaded before the scenario
+            if (fishingData == null && SportsScenario.Instance != null)
+            {
+                fishingData = SportsScenario.Instance.GetFishingData(pcm);
+                fishRecord = fishingData.BiggestFish(vessel.mainBody);
+                fishCount = fishingData.FishCount(vessel.mainBody);
+            }
+
             if (vessel.situation != Vessel.Situations.LANDED || !vessel.mainBody.ocean || vessel.altitude > 250)
             {
                 SetShowing(false);
@@ -64,7 +76,6 @@ namespace Fishing
                     SetShowing(false);
                 }
             }
-
         }
 
         protected void SetShowing(bool showing)
@@ -76,6 +87,7 @@ namespace Fishing
                 // Show/hide our fields
                 Fields["fishType"].guiActive = showing;
                 Fields["fishRecord"].guiActive = showing;
+                Fields["fishCount"].guiActive = showing;
                 Events["StartFishing"].guiActive = showing;
             }
         }

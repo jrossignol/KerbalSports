@@ -6,9 +6,9 @@ using System.Text;
 using UnityEngine;
 using KSP;
 using KSP.UI.Screens.Flight;
-using Fishing.KerbalAnimation;
+using KerbalSports.KerbalAnimation;
 
-namespace Fishing
+namespace KerbalSports.Fishing
 {
     public class FishingDriver : MonoBehaviour
     {
@@ -28,6 +28,7 @@ namespace Fishing
 
         Vessel evaVessel;
         ProtoCrewMember kerbalFisher;
+        FishingData fishingData;
         Animation animation;
         Fish currentFish;
         FishingPole fishingPole;
@@ -38,13 +39,17 @@ namespace Fishing
         const double castDuration = 0.4;
         const double castTime = 2.0;
         const float rodDelta = 0.040f;
-        const float rodWindowRatio = 0.1f;
-        const float distWindowRatio = 0.1f;
+        const float defaultRodWindowRatio = 0.075f;
+        const float defaultDistWindowRatio = 0.075f;
         const float reelingSpeed = 0.2f;
         const float defaultHookedReelingSpeed = 0.12f;
         const float defaultFishCatchSpeed = 0.100f;
         const float defaultFishEscapeSpeed = 0.100f;
         const float maxRodLeeway = 0.1f;
+        const float maxSkill = 100.0f;
+        const float caughtSkillIncrease = 5.0f;
+        const float missedSkillIncrease = 1.0f;
+        const float castSkillIncrease = 0.1f;
 
         // State and time
         public FishingState fishingState { get; private set; }
@@ -62,16 +67,22 @@ namespace Fishing
         float hookedReelingSpeed;
         float fishCatchSpeed;
         float fishEscapeSpeed;
+        float rodWindowRatio;
+        float distWindowRatio;
 
         // GUI stuff
         bool texturesLoaded = false;
         Texture2D windowTex;
         Texture2D rodWindowTex;
+        Texture2D distanceWindowTex;
+        Texture2D skillWindowTex;
         Texture2D ctrlSmashTex;
         Texture2D fishLeftTex;
         Texture2D fishRightTex;
         Texture2D bobTex;
-        GUIStyle textStyle;
+        GUIStyle ctrlTextStyle;
+        GUIStyle smallTextStyle;
+        GUIStyle bigTextStyle;
         Rect sourceRect = new Rect(0.0f, 0.0f, 1f, 1f);
         Color smashColor = new Color(0x75 / 255.0f, 0x20 / 255.0f, 0x20 / 255.0f);
 
@@ -138,6 +149,7 @@ namespace Fishing
         {
             evaVessel = v;
             kerbalFisher = pcm;
+            fishingData = SportsScenario.Instance.GetFishingData(pcm);
 
             SetState(FishingState.StartFishing);
 
@@ -254,21 +266,45 @@ namespace Fishing
                     // Calculate reference positions
                     float ctrlWidth = 64.0f;
                     float distanceTop = 128f;
-                    float distanceHeight = Screen.height - 196f - 32f - 8.0f - 16f - distanceTop;
+                    float distanceHeight = Screen.height - 196f - 32f - 8.0f - 32f - distanceTop;
                     float distanceCenter = distanceTop + distanceHeight / 2.0f;
-                    float bobCenter = (distanceHeight - 24f) * (0.5f - bobDistance) + distanceCenter;
+                    float bobCenter = (distanceHeight - 24f - 10f) * (0.5f - bobDistance) + distanceCenter;
 
                     // Draw the CTRL buttons
                     Rect ctrl1Rect = new Rect(displayLeft, Screen.height - 32f - 196f - 8.0f, ctrlWidth, 48f);
                     Rect ctrl2Rect = new Rect(displayRight - ctrlWidth, Screen.height - 32f - 196f - 8.0f, ctrlWidth, 48f);
                     Graphics.DrawTexture(ctrl1Rect, windowTex, 6, 6, 6, 6);
                     Graphics.DrawTexture(ctrl2Rect, windowTex, 6, 6, 6, 6);
-                    GUI.Label(ctrl1Rect, "CTRL", textStyle);
-                    GUI.Label(ctrl2Rect, "CTRL", textStyle);
+                    GUI.Label(ctrl1Rect, "CTRL", ctrlTextStyle);
+                    GUI.Label(ctrl2Rect, "CTRL", ctrlTextStyle);
 
                     // Draw the distance meter
                     Rect distanceRect = new Rect(displayLeft + 16f, distanceTop, 32f, distanceHeight);
                     Graphics.DrawTexture(distanceRect, windowTex, 6, 6, 6, 6);
+
+                    // Draw the skill meter window
+                    Rect skillRect = new Rect(displayRight - 48f, distanceTop, 32f, distanceHeight);
+                    Graphics.DrawTexture(skillRect, windowTex, 6, 6, 6, 6);
+                    Rect skillTextRect = new Rect(displayRight - 64f, distanceTop + distanceHeight, 64f, 10f);
+                    GUI.Label(skillTextRect, "SKILL", smallTextStyle);
+
+                    // Draw the actual skill meter
+                    float skillHeight = (float) fishingData.skill / maxSkill * (distanceHeight - 10f);
+                    float skillTop = distanceTop + distanceHeight - skillHeight - 5f;
+                    Rect skillMeterRect = new Rect(displayRight - 48f + 5f, skillTop, 22f, skillHeight);
+                    Graphics.DrawTexture(skillMeterRect, skillWindowTex);
+
+                    // Hint to cast
+                    if (fishingState == FishingState.Idle && Time.time - stateStartTime > 5.0f)
+                    {
+                        // Flashing!
+                        if ((int)((Time.time - stateStartTime) * 2.0f) % 4 != 0)
+                        {
+                            // Draw the hint text
+                            Rect spaceCastRect = new Rect(displayCenter - 256f, Screen.height - 32f - 196f - 16.0f, 512f, 64f);
+                            GUI.Label(spaceCastRect, "Press SPACE to cast!", bigTextStyle);
+                        }
+                    }
 
                     if (fishingState == FishingState.Hooked)
                     {
@@ -279,17 +315,17 @@ namespace Fishing
 
                         // Draw the rod distance window
                         float rodDistanceTop = (distanceHeight - 24f) * (0.5f + rodLeeway - maxRodLeeway - bobDistance) + distanceCenter;
-                        if (rodDistanceTop < distanceTop + 2)
+                        if (rodDistanceTop < distanceTop + 5)
                         {
-                            rodWindowHeight -= (distanceTop + 2) - rodDistanceTop;
-                            rodDistanceTop = distanceTop + 2;
+                            rodWindowHeight -= (distanceTop + 5) - rodDistanceTop;
+                            rodDistanceTop = distanceTop + 5;
                         }
-                        else if ((rodDistanceTop + rodWindowHeight) > (distanceTop + distanceHeight - 2))
+                        else if ((rodDistanceTop + rodWindowHeight) > (distanceTop + distanceHeight - 5))
                         {
-                            rodWindowHeight = distanceTop + distanceHeight - 2 - rodDistanceTop;
+                            rodWindowHeight = distanceTop + distanceHeight - 5 - rodDistanceTop;
                         }
-                        Rect rodDistanceRect = new Rect(displayLeft + 18f, rodDistanceTop, 28f, rodWindowHeight);
-                        Graphics.DrawTexture(rodDistanceRect, rodWindowTex);
+                        Rect rodDistanceRect = new Rect(displayLeft + 16f + 5f, rodDistanceTop, 22f, rodWindowHeight);
+                        Graphics.DrawTexture(rodDistanceRect, distanceWindowTex);
 
                         // Draw the rod window
                         float rodCenter = (fishWindowWidth - rodWindowWidth) * (rodPosition - 0.5f) + displayCenter;
@@ -331,11 +367,13 @@ namespace Fishing
         {
             windowTex = GameDatabase.Instance.GetTexture("KerbalSports/images/window", false);
             rodWindowTex = GameDatabase.Instance.GetTexture("KerbalSports/images/rodWindow", false);
+            distanceWindowTex = GameDatabase.Instance.GetTexture("KerbalSports/images/distanceWindow", false);
+            skillWindowTex = GameDatabase.Instance.GetTexture("KerbalSports/images/skillWindow", false);
             ctrlSmashTex = GameDatabase.Instance.GetTexture("KerbalSports/images/ctrlSmash", false);
             fishLeftTex = GameDatabase.Instance.GetTexture("KerbalSports/images/fishL", false);
             fishRightTex = GameDatabase.Instance.GetTexture("KerbalSports/images/fishR", false);
             bobTex = GameDatabase.Instance.GetTexture("KerbalSports/images/bob", false);
-            textStyle = new GUIStyle(HighLogic.Skin.label)
+            ctrlTextStyle = new GUIStyle(HighLogic.Skin.label)
             {
                 normal =
                 {
@@ -347,6 +385,32 @@ namespace Fishing
                 fontSize = 16,
                 fontStyle = FontStyle.Bold,
                 fixedHeight = 48.0f
+            };
+            smallTextStyle = new GUIStyle(HighLogic.Skin.label)
+            {
+                normal =
+                {
+                    textColor = Color.white
+                },
+                margin = new RectOffset(),
+                padding = new RectOffset(8, 8, 8, 8),
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 12,
+                fontStyle = FontStyle.Bold,
+                fixedHeight = 24.0f
+            };
+            bigTextStyle = new GUIStyle(HighLogic.Skin.label)
+            {
+                normal =
+                {
+                    textColor = Color.white
+                },
+                margin = new RectOffset(),
+                padding = new RectOffset(8, 8, 8, 8),
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 24,
+                fontStyle = FontStyle.Bold,
+                fixedHeight = 64.0f
             };
         }
 
@@ -440,17 +504,22 @@ namespace Fishing
                     // Has a fish been hooked?
                     if (bobDistance < fishHookDistance)
                     {
+                        SportsScenario.Instance.failedAttempts = 0;
+
                         currentFish = new Fish(evaVessel, bodyDifficulty);
-                        fishCatchSpeed = (float)(defaultFishCatchSpeed / currentFish.difficulty);
-                        fishEscapeSpeed = (float)(defaultFishEscapeSpeed * currentFish.difficulty);
+                        fishCatchSpeed = (float)(defaultFishCatchSpeed / currentFish.difficulty) * (fishingData.skill / maxSkill + 1.0f);
+                        fishEscapeSpeed = (float)(defaultFishEscapeSpeed * currentFish.difficulty) / (fishingData.skill / maxSkill + 1.0f);
+                        rodWindowRatio = defaultRodWindowRatio * (fishingData.skill / maxSkill + 1.0f);
+                        distWindowRatio = defaultDistWindowRatio * (fishingData.skill / maxSkill + 1.0f);
 
                         SetState(FishingState.Hooked);
                     }
                     else if (bobDistance <= 0)
                     {
                         SetState(FishingState.Idle);
-                        FishingScenario.Instance.failedAttempts++;
-                        Debug.Log("failed attempts = " + FishingScenario.Instance.failedAttempts);
+                        SportsScenario.Instance.failedAttempts++;
+                        fishingData.IncreaseSkill(castSkillIncrease);
+                        Debug.Log("failed attempts = " + SportsScenario.Instance.failedAttempts);
                     }
                     break;
                 case FishingState.Hooked:
@@ -490,6 +559,7 @@ namespace Fishing
                     if (bobDistance > 1.0f)
                     {
                         ScreenMessages.PostScreenMessage("The fish got away.", 5, ScreenMessageStyle.UPPER_CENTER);
+                        fishingData.IncreaseSkill(missedSkillIncrease);
                         SetState(FishingState.Idle);
                     }
                     else if (bobDistance < 0.0f)
@@ -548,6 +618,14 @@ namespace Fishing
                 KerbalEVA eva = evaVessel.GetComponent<KerbalEVA>();
                 animation.Stop();
                 animation.Play(eva.Animations.idle.animationName);
+
+                // Update the fishing module record
+                ModuleFishing mFishing = evaVessel.GetComponent<ModuleFishing>();
+                if (mFishing != null)
+                {
+                    mFishing.fishRecord = fishingData.BiggestFish(evaVessel.mainBody);
+                    mFishing.fishCount = fishingData.FishCount(evaVessel.mainBody);
+                }
             }
 
             // Calculate the camera start position
@@ -616,7 +694,7 @@ namespace Fishing
             // Decide if a fish will be caught on this cast, and when
             if (newState == FishingState.Reeling)
             {
-                double catchChance = (FishingScenario.Instance.failedAttempts + 1) / 6.0;
+                double catchChance = (SportsScenario.Instance.failedAttempts + 1) / 6.0;
                 if (catchChance >= 1.0 || rand.NextDouble() < catchChance)
                 {
                     fishHookDistance = (float)rand.NextDouble() * 0.55f + 0.25f;
@@ -638,7 +716,8 @@ namespace Fishing
             // Caught a fish, record it
             if (newState == FishingState.Caught)
             {
-                FishingScenario.Instance.CaughtFish(kerbalFisher, currentFish);
+                fishingData.CaughtFish(evaVessel.mainBody, currentFish);
+                fishingData.IncreaseSkill(caughtSkillIncrease);
             }
 
             stateStartTime = Time.fixedTime;
