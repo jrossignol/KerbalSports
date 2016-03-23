@@ -69,8 +69,8 @@ namespace KerbalSports
             if (windowPos.width == 0 && windowPos.height == 0)
             {
                 float x = Screen.width / 2.0f - w;
-                float h = 600f;
-                float y = Math.Max(144f, Screen.height/2.0f - h);
+                float h = 192f;
+                float y = 144f;
 
                 windowPos = new Rect(x, y, w, h);
             }
@@ -220,6 +220,7 @@ namespace KerbalSports
                 DisplayName(128);
 
                 GUILayout.EndVertical();
+                GUILayout.Space(8);
             }
 
             // Display text
@@ -244,6 +245,7 @@ namespace KerbalSports
             if (GUILayout.Button("OK", GUILayout.MinWidth(80)))
             {
                 visible = false;
+                Destroy(this);
             }
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
