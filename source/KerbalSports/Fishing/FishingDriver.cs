@@ -187,12 +187,14 @@ namespace KerbalSports.Fishing
             Debug.Log("Body difficulty for " + evaVessel.mainBody.name + " = " + bodyDifficulty);
 
             // Pop up the tutorial dialog
-            if (firstTimeDialog == null)
+            if (firstTimeDialog == null && !SportsScenario.Instance.tutorialDialogShown)
             {
                 firstTimeDialog = gameObject.AddComponent<GenericDialog>();
                 firstTimeDialog.instructorName = "Strategy_MechanicGuy";
                 firstTimeDialog.text = tutorialText;
                 firstTimeDialog.animation = GenericDialog.Animation.true_nodA;
+
+                SportsScenario.Instance.tutorialDialogShown = true;
             }
         }
 
@@ -570,13 +572,27 @@ namespace KerbalSports.Fishing
                     // Check if the fish got away
                     if (bobDistance > 1.0f)
                     {
-                        ScreenMessages.PostScreenMessage("The fish got away.", 5, ScreenMessageStyle.UPPER_CENTER);
+                        GenericDialog caughtDialog = gameObject.AddComponent<GenericDialog>();
+                        caughtDialog.instructorName = "Strategy_MechanicGuy";
+                        caughtDialog.animation = GenericDialog.Animation.false_disappointed;
+                        caughtDialog.text = "Looks like the fish got away this time...";
+
                         fishingData.IncreaseSkill(missedSkillIncrease);
                         SetState(FishingState.Idle);
                     }
                     else if (bobDistance < 0.0f)
                     {
-                        ScreenMessages.PostScreenMessage("You caught a " + currentFish.weight.ToString("N1") + " kg fish!", 5, ScreenMessageStyle.UPPER_CENTER);
+                        GenericDialog caughtDialog = gameObject.AddComponent<GenericDialog>();
+                        caughtDialog.instructorName = "Strategy_MechanicGuy";
+                        caughtDialog.animation = GenericDialog.Animation.true_thumbsUp;
+                        caughtDialog.text = "Great job, you caught a " + currentFish.weight.ToString("N1") + " kg fish!";
+
+                        if (Funding.Instance != null)
+                        {
+                            Funding.Instance.AddFunds(currentFish.funds, TransactionReasons.Strategies);
+                            caughtDialog.text += "\n\nReward: <color=#B4D455>√ " + currentFish.funds.ToString("N0") + "</color>";
+                        }
+
                         SetState(FishingState.Caught);
                     }
 
@@ -706,7 +722,7 @@ namespace KerbalSports.Fishing
             // Decide if a fish will be caught on this cast, and when
             if (newState == FishingState.Reeling)
             {
-                double catchChance = (SportsScenario.Instance.failedAttempts + 1) / 6.0;
+                double catchChance = (SportsScenario.Instance.failedAttempts + 1) / 5.0;
                 if (catchChance >= 1.0 || rand.NextDouble() < catchChance)
                 {
                     fishHookDistance = (float)rand.NextDouble() * 0.55f + 0.25f;

@@ -19,6 +19,7 @@ namespace KerbalSports.Fishing
 
         // Fishing stuff
         public int failedAttempts;
+        public bool tutorialDialogShown = false;
 
         public override void OnSave(ConfigNode node)
         {
@@ -28,6 +29,7 @@ namespace KerbalSports.Fishing
             node.AddNode(fishingNode);
 
             fishingNode.AddValue("failedAttempts", failedAttempts);
+            fishingNode.AddValue("tutorialDialogShown", tutorialDialogShown);
 
             foreach (KeyValuePair<string, FishingData> pair in fishingData)
             {
@@ -53,6 +55,10 @@ namespace KerbalSports.Fishing
             {
                 ConfigNode fishingNode = node.GetNode("FISHING");
                 failedAttempts = Convert.ToInt32(fishingNode.GetValue("failedAttempts"));
+                if (fishingNode.HasValue("tutorialDialogShown"))
+                {
+                    tutorialDialogShown = Convert.ToBoolean(fishingNode.GetValue("tutorialDialogShown"));
+                }
 
                 foreach (ConfigNode kerbalNode in fishingNode.GetNodes("KERBAL"))
                 {

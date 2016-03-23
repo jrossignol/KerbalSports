@@ -23,6 +23,7 @@ namespace KerbalSports.Fishing
         public float speed = 0.0f;
         public FishType fishType;
         public double difficulty;
+        public double funds;
 
         protected double bodyDifficulty;
 
@@ -77,6 +78,9 @@ namespace KerbalSports.Fishing
 
             // Determine the fish difficulty modifier
             difficulty = Mathf.Clamp((float)(Math.Log(weight, 16) + 0.5), 0.5f, float.MaxValue);
+
+            // Determine the fish reward
+            funds = rnd.NextGaussianDouble(500, 100) * (Math.Log(weight + 1.0, 1.4)) * difficulty * difficulty;
 
             Debug.Log("Generated a fish of type " + fishType + ", weight " + weight.ToString("N1") + " kg, and difficulty " + difficulty + ".");
 
