@@ -167,7 +167,6 @@ namespace KerbalSports.KerbalAnimation
         {
             clip = new AnimationClip();
             clip.wrapMode = WrapMode.Once;
-            clip.legacy = true;
 
             //populate dictionaries with curves
             RotationWCurves.Clear();

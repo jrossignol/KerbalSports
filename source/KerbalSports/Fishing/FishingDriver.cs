@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Text;
 using UnityEngine;
 using KSP;
-using KSP.UI.Screens.Flight;
 using KerbalSports.KerbalAnimation;
 
 namespace KerbalSports.Fishing
@@ -605,11 +604,12 @@ namespace KerbalSports.Fishing
                 InputLockManager.SetControlLock(locks, "Fishing");
 
                 // Hide navball
+                /*
                 navballToggled = NavBallToggle.Instance.panel.expanded;
                 if (navballToggled)
                 {
                     NavBallToggle.Instance.panel.Collapse();
-                }
+                }*/
             }
             // Undo what we did
             else if (newState == FishingState.NotFishing)
@@ -618,10 +618,10 @@ namespace KerbalSports.Fishing
                 InputLockManager.RemoveControlLock("Fishing");
 
                 // Restore navball
-                if (navballToggled)
+                /*if (navballToggled)
                 {
                     NavBallToggle.Instance.panel.Expand();
-                }
+                }*/
 
                 // Remove the fishing pole
                 Destroy(fishingPole);
