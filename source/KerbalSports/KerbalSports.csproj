@@ -64,6 +64,7 @@
     <Compile Include="Fishing\FishingLoader.cs" />
     <Compile Include="Fishing\FishingDriver.cs" />
     <Compile Include="Fishing\FishingPole.cs" />
+    <Compile Include="GenericDialog.cs" />
     <Compile Include="SportsScenario.cs" />
     <Compile Include="KerbalAnimation\KerbalAnimationClip.cs" />
     <Compile Include="Fishing\ModuleFishing.cs" />

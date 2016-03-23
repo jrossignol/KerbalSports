@@ -33,6 +33,7 @@ namespace KerbalSports.Fishing
         Fish currentFish;
         FishingPole fishingPole;
         bool navballToggled;
+        GenericDialog firstTimeDialog;
 
         const double ctrlDeltaTime = 0.1;
         const double castDelay = 1.2;
@@ -103,6 +104,8 @@ namespace KerbalSports.Fishing
         const float defaultCameraZoomTime = 2.0f;
         const float minAngularVelocity = 20.0f * (float)Math.PI / 180.0f;
         const float maxZoomVelocity = 5.0f;
+
+        static string tutorialText = "Welcome to Jebediah Kerman's Fishing Challenge!  My name is Gus and I'm going to walk you through how to do a little bit of fishing.  If it seems a little bit difficult at first, don't fret (of course it's difficult, it's not rocket science afterall)!  Still, I'm sure a dedicated Kerbal like yourself should pick this up in no time.\n\nFirst, the UI.  On the left is the casting distance window - it shows how far out your bob is (it can't tell you how far out Bob Kerman is though).  When you have a fish hooked, it will also show you how much leeway is on your line.  On the right is the skill meter.  Simple enough - fish more to get better at fishing.  On the bottom a new bar will show up when you hook a fish (we'll get to that one shortly).\n\nTo cast your line, press the <color=#86E900>SPACEBAR</color> key.  Once the line is out, hold either <color=#86E900>SHIFT</color> key to reel it in.  If you manage to hook a fish, you'll see the new UI elements appear.\n\nOnce you're hooked a fish, keep the fish centered in the green bar in the bottom window using the left and right <color=#86E900>CTRL</color> keys.  As you do this, you will start pulling back on the rod.  Once the rod is pulled back, press the <color=#86E900>SHIFT</color> key to reel the fish in a little bit.  Repeat this process until you've caught a fish!\n\nGood luck, and remember - if you want to practise on some easy fish, head on over to the Administration building and try out the stock pond (only available at Administration building level 3).";
 
         void Awake()
         {
@@ -182,6 +185,15 @@ namespace KerbalSports.Fishing
             bodyDifficulty = gravityModifier + scienceModifier;
             hookedReelingSpeed = defaultHookedReelingSpeed / (float)bodyDifficulty;
             Debug.Log("Body difficulty for " + evaVessel.mainBody.name + " = " + bodyDifficulty);
+
+            // Pop up the tutorial dialog
+            if (firstTimeDialog == null)
+            {
+                firstTimeDialog = gameObject.AddComponent<GenericDialog>();
+                firstTimeDialog.instructorName = "Strategy_MechanicGuy";
+                firstTimeDialog.text = tutorialText;
+                firstTimeDialog.animation = GenericDialog.Animation.true_nodA;
+            }
         }
 
         void OnGUI()
