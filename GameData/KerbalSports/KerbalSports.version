@@ -6,7 +6,7 @@
      "GITHUB":{
          "USERNAME":"jrossignol",
          "REPOSITORY":"KerbalSports",
-         "ALLOW_PRE_RELEASE":false
+         "ALLOW_PRE_RELEASE":true
      },
      "VERSION":{
          "MAJOR":0,
