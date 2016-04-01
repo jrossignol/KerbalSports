@@ -72,7 +72,7 @@ namespace KerbalSports.Fishing
                         {
                             FishingData.FishingStats stats = data.fishingStats[body] = new FishingData.FishingStats();
                             stats.biggestFish = Convert.ToDouble(bodyNode.GetValue("biggestFish"));
-                            stats.fishCaught = Convert.ToInt32(bodyNode.GetValue("fightCaught"));
+                            stats.fishCaught = Convert.ToInt32(bodyNode.GetValue("fishCaught"));
                         }
                     }
                 }

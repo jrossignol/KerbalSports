@@ -1,2 +1,2 @@
-Kerbal Sports 0.0.2
-- Initial pre-release.
+Kerbal Sports 1.0.0
+- Initial release.

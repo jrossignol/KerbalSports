@@ -267,25 +267,25 @@ namespace KerbalSports.Fishing
                     }
                 }
 
-                // Calculate UI size
-                float displayWidth = Math.Min(Screen.width, Screen.height * 16.0f / 9.0f) - 128f;
-                float displayLeft = (Screen.width - displayWidth) / 2.0f;
-                float displayCenter = Screen.width / 2.0f;
-                float displayRight = displayLeft + displayWidth;
-
                 // UI elements
                 if (Event.current.type == EventType.Repaint)
                 {
+                    // Calculate UI size
+                    float displayWidth = Math.Min(Screen.width, Screen.height * 16.0f / 9.0f) - 128f;
+                    float displayLeft = (Screen.width - displayWidth) / 2.0f;
+                    float displayCenter = Screen.width / 2.0f;
+                    float displayRight = displayLeft + displayWidth;
+
                     // Calculate reference positions
                     float ctrlWidth = 64.0f;
                     float distanceTop = 128f;
-                    float distanceHeight = Screen.height - 196f - 32f - 8.0f - 32f - distanceTop;
+                    float distanceHeight = Screen.height - 64f - 32f - 8.0f - 32f - distanceTop;
                     float distanceCenter = distanceTop + distanceHeight / 2.0f;
                     float bobCenter = (distanceHeight - 24f - 10f) * (0.5f - bobDistance) + distanceCenter;
 
                     // Draw the CTRL buttons
-                    Rect ctrl1Rect = new Rect(displayLeft, Screen.height - 32f - 196f - 8.0f, ctrlWidth, 48f);
-                    Rect ctrl2Rect = new Rect(displayRight - ctrlWidth, Screen.height - 32f - 196f - 8.0f, ctrlWidth, 48f);
+                    Rect ctrl1Rect = new Rect(displayLeft, Screen.height - 32f - 64f - 8.0f, ctrlWidth, 48f);
+                    Rect ctrl2Rect = new Rect(displayRight - ctrlWidth, Screen.height - 32f - 64f - 8.0f, ctrlWidth, 48f);
                     Graphics.DrawTexture(ctrl1Rect, windowTex, 6, 6, 6, 6);
                     Graphics.DrawTexture(ctrl2Rect, windowTex, 6, 6, 6, 6);
                     GUI.Label(ctrl1Rect, "CTRL", ctrlTextStyle);
@@ -314,7 +314,7 @@ namespace KerbalSports.Fishing
                         if ((int)((Time.time - stateStartTime) * 2.0f) % 4 != 0)
                         {
                             // Draw the hint text
-                            Rect spaceCastRect = new Rect(displayCenter - 256f, Screen.height - 32f - 196f - 16.0f, 512f, 64f);
+                            Rect spaceCastRect = new Rect(displayCenter - 256f, Screen.height - 32f - 64f - 16.0f, 512f, 64f);
                             GUI.Label(spaceCastRect, "Press SPACE to cast!", bigTextStyle);
                         }
                     }
@@ -342,29 +342,29 @@ namespace KerbalSports.Fishing
 
                         // Draw the rod window
                         float rodCenter = (fishWindowWidth - rodWindowWidth) * (rodPosition - 0.5f) + displayCenter;
-                        Rect rodWindowRect = new Rect(rodCenter - rodWindowWidth / 2.0f, Screen.height - 30f - 196f, rodWindowWidth, 28f);
+                        Rect rodWindowRect = new Rect(rodCenter - rodWindowWidth / 2.0f, Screen.height - 30f - 64f, rodWindowWidth, 28f);
                         Graphics.DrawTexture(rodWindowRect, rodWindowTex);
 
                         // Draw the fish window
-                        Rect fishWindowRect = new Rect(displayCenter - fishWindowWidth / 2.0f, Screen.height - 32f - 196f, fishWindowWidth, 32f);
+                        Rect fishWindowRect = new Rect(displayCenter - fishWindowWidth / 2.0f, Screen.height - 32f - 64f, fishWindowWidth, 32f);
                         Graphics.DrawTexture(fishWindowRect, windowTex, 6, 6, 6, 6);
 
                         // Draw the fish
                         float fishCenter = (fishWindowWidth - 48f) * (currentFish.position - 0.5f) + displayCenter;
-                        Rect fishRect = new Rect(fishCenter - 24f, Screen.height - 32f - 196f + 4f, 48f, 24f);
+                        Rect fishRect = new Rect(fishCenter - 24f, Screen.height - 32f - 64f + 4f, 48f, 24f);
                         Graphics.DrawTexture(fishRect, currentFish.speed > 0 ? fishRightTex : fishLeftTex);
 
                         // Draw the first control smash
                         if (lCtrlTime + ctrlDeltaTime > Time.time)
                         {
-                            Rect smashRect = new Rect(displayLeft - 32.0f, Screen.height - 16f - 196f - 64.0f, 128f, 128f);
+                            Rect smashRect = new Rect(displayLeft - 32.0f, Screen.height - 16f - 64f - 64.0f, 128f, 128f);
                             Graphics.DrawTexture(smashRect, ctrlSmashTex, sourceRect, 0, 0, 0, 0, smashColor);
                         }
 
                         // Draw the second control smash
                         if (rCtrlTime + ctrlDeltaTime > Time.time)
                         {
-                            Rect smashRect = new Rect(displayRight - ctrlWidth - 32.0f, Screen.height - 16f - 196f - 64.0f, 128f, 128f);
+                            Rect smashRect = new Rect(displayRight - ctrlWidth - 32.0f, Screen.height - 16f - 64f - 64.0f, 128f, 128f);
                             Graphics.DrawTexture(smashRect, ctrlSmashTex, sourceRect, 0, 0, 0, 0, smashColor);
                         }
                     }
@@ -429,6 +429,13 @@ namespace KerbalSports.Fishing
 
         void Update()
         {
+            // If the Kerbal falls into the water, cancel the fishing trip
+            if (evaVessel.situation != Vessel.Situations.LANDED)
+            {
+                SetState(FishingState.NotFishing);
+                return;
+            }
+
             // Move our camera towards the desired positioning
             if (fishingState == FishingState.StartFishing)
             {

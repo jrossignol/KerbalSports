@@ -10,11 +10,11 @@ namespace KerbalSports.Fishing
 {
     public class ModuleFishing : PartModule
     {
-        [KSPField(guiName="Type of Fish in Region", guiActive=true)]
+        [KSPField(guiName="Fishing type", guiActive=true)]
         string fishType;
-        [KSPField(guiName = "Biggest Fish Caught", guiActive = true, guiFormat = "N1", guiUnits = "kg")]
+        [KSPField(guiName = "Biggest Catch", guiActive = true, guiFormat = "N1", guiUnits = "kg")]
         public double fishRecord = 0.0;
-        [KSPField(guiName = "Number of Fish Caught", guiActive = true, guiFormat = "N0")]
+        [KSPField(guiName = "Fish Caught", guiActive = true, guiFormat = "N0")]
         public int fishCount = 0;
         ProtoCrewMember pcm;
         bool showing = true;
