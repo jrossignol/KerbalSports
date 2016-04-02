@@ -430,6 +430,12 @@ namespace KerbalSports.Fishing
 
         void Update()
         {
+            // No fishing
+            if (fishingState == FishingState.NotFishing)
+            {
+                return;
+            }
+
             // If the Kerbal falls into the water, cancel the fishing trip
             if (evaVessel.situation != Vessel.Situations.LANDED)
             {

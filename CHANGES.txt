@@ -1,2 +1,5 @@
+Kerbal Sports 1.0.1
+- Fixed not fishing log spam and broken animations (thanks YellowApple).
+
 Kerbal Sports 1.0.0
 - Initial release.
