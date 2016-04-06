@@ -1,3 +1,6 @@
+Kerbal Sports 1.0.2
+- Added alternate keybinding for systems without two CTRL buttons (apple key or arrow keys can be used in place of CTRL).
+
 Kerbal Sports 1.0.1
 - Fixed not fishing log spam and broken animations (thanks YellowApple).
 
