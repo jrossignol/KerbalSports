@@ -232,11 +232,11 @@ namespace KerbalSports.Fishing
                             }
                             break;
                         case FishingState.Hooked:
-                            if (Event.current.keyCode == KeyCode.LeftControl)
+                            if (Event.current.keyCode == KeyCode.LeftControl || Event.current.keyCode == KeyCode.LeftApple || Event.current.keyCode == KeyCode.LeftArrow)
                             {
                                 lCtrlTime = 0.0;
                             }
-                            else if (Event.current.keyCode == KeyCode.RightControl)
+                            else if (Event.current.keyCode == KeyCode.RightControl || Event.current.keyCode == KeyCode.RightApple || Event.current.keyCode == KeyCode.RightArrow)
                             {
                                 rCtrlTime = 0.0;
                             }
