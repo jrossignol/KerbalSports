@@ -1,3 +1,6 @@
+Kerbal Sports 1.0.5
+- Fixed black screen/exceptions on scene change (thanks politas).
+
 Kerbal Sports 1.0.4
 - Release with KSP 1.1.1 compatibility (for CKAN).
 

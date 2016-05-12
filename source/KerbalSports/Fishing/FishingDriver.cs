@@ -510,6 +510,12 @@ namespace KerbalSports.Fishing
 
         void FixedUpdate()
         {
+            // Can happen on scene change before our destroy gets called
+            if (FlightCamera.fetch == null)
+            {
+                return;
+            }
+
             Vector3 relpos = (FlightCamera.fetch.transform.position - evaVessel.transform.position);
             Vector3 scale = (FlightCamera.fetch.transform.localScale);
             switch (fishingState)
