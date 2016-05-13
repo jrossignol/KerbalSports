@@ -511,7 +511,7 @@ namespace KerbalSports.Fishing
         void FixedUpdate()
         {
             // Can happen on scene change before our destroy gets called
-            if (FlightCamera.fetch == null)
+            if (FlightCamera.fetch == null || evaVessel == null)
             {
                 return;
             }
