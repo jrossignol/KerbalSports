@@ -653,7 +653,7 @@ namespace KerbalSports.Fishing
                 InputLockManager.RemoveControlLock("Fishing");
 
                 // Restore navball
-                if (navballToggled)
+                if (navballToggled && NavBallToggle.Instance != null)
                 {
                     NavBallToggle.Instance.panel.Expand();
                 }
@@ -661,17 +661,20 @@ namespace KerbalSports.Fishing
                 // Remove the fishing pole
                 Destroy(fishingPole);
 
-                // Set the animation back to the idle one
-                KerbalEVA eva = evaVessel.GetComponent<KerbalEVA>();
-                animation.Stop();
-                animation.Play(eva.Animations.idle.animationName);
-
-                // Update the fishing module record
-                ModuleFishing mFishing = evaVessel.GetComponent<ModuleFishing>();
-                if (mFishing != null)
+                if (evaVessel != null)
                 {
-                    mFishing.fishRecord = fishingData.BiggestFish(evaVessel.mainBody);
-                    mFishing.fishCount = fishingData.FishCount(evaVessel.mainBody);
+                    // Set the animation back to the idle one
+                    KerbalEVA eva = evaVessel.GetComponent<KerbalEVA>();
+                    animation.Stop();
+                    animation.Play(eva.Animations.idle.animationName);
+
+                    // Update the fishing module record
+                    ModuleFishing mFishing = evaVessel.GetComponent<ModuleFishing>();
+                    if (mFishing != null)
+                    {
+                        mFishing.fishRecord = fishingData.BiggestFish(evaVessel.mainBody);
+                        mFishing.fishCount = fishingData.FishCount(evaVessel.mainBody);
+                    }
                 }
             }
 
