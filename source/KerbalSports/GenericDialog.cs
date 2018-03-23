@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using KSP.Localization;
 
 namespace KerbalSports
 {
@@ -112,20 +113,6 @@ namespace KerbalSports
                 instructor.instructorCamera.targetTexture = instructorTexture;
                 instructor.instructorCamera.ResetAspect();
 
-                // TODO - this not needed in 1.1 as of current build
-                // Remove the lights for Gene/Wernher
-                /*
-                Light mainlight = instructor.GetComponentsInChildren<Light>(true).Where(l => l.name == "mainlight").FirstOrDefault();
-                if (mainlight != null)
-                {
-                    UnityEngine.Object.Destroy(mainlight);
-                }
-                Light backlight = instructor.GetComponentsInChildren<Light>(true).Where(l => l.name == "backlight").FirstOrDefault();
-                if (backlight != null)
-                {
-                    UnityEngine.Object.Destroy(backlight);
-                }*/
-
                 offset += 25f;
                 instructor.gameObject.transform.Translate(offset, 0.0f, 0.0f);
 
@@ -137,7 +124,7 @@ namespace KerbalSports
 
                 if (string.IsNullOrEmpty(characterName))
                 {
-                    characterName = instructor.CharacterName;
+                    characterName = Localizer.GetStringByTag(instructor.CharacterName);
                 }
 
                 instructor.SetupAnimations();

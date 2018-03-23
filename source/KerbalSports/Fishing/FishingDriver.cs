@@ -6,6 +6,7 @@ using System.Text;
 using UnityEngine;
 using KSP;
 using KSP.UI.Screens.Flight;
+using KSP.Localization;
 using KerbalSports.KerbalAnimation;
 
 namespace KerbalSports.Fishing
@@ -105,7 +106,13 @@ namespace KerbalSports.Fishing
         const float minAngularVelocity = 20.0f * (float)Math.PI / 180.0f;
         const float maxZoomVelocity = 5.0f;
 
-        static string tutorialText = "Welcome to Jebediah Kerman's Fishing Challenge!  My name is Gus and I'm going to walk you through how to do a little bit of fishing.  If it seems a little bit difficult at first, don't fret (of course it's difficult, it's not rocket science afterall)!  Still, I'm sure a dedicated Kerbal like yourself should pick this up in no time.\n\nFirst, the UI.  On the left is the casting distance window - it shows how far out your bob is (it can't tell you how far out Bob Kerman is though).  When you have a fish hooked, it will also show you how much leeway is on your line.  On the right is the skill meter.  Simple enough - fish more to get better at fishing.  On the bottom a new bar will show up when you hook a fish (we'll get to that one shortly).\n\nTo cast your line, press the <color=#86E900>SPACEBAR</color> key.  Once the line is out, hold either <color=#86E900>SHIFT</color> key to reel it in.  If you manage to hook a fish, you'll see the new UI elements appear.\n\nOnce you're hooked a fish, keep the fish centered in the green bar in the bottom window using the left and right <color=#86E900>CTRL</color> keys (or <color=#86E900>Command</color> on some systems).  As you do this, you will start pulling back on the rod.  Once the rod is pulled back, press the <color=#86E900>SHIFT</color> key to reel the fish in a little bit.  Repeat this process until you've caught a fish!\n\nGood luck, and remember - if you want to practise on some easy fish, head on over to the Administration building and try out the stock pond (only available at Administration building level 3).";
+        static string tutorialText = Localizer.GetStringByTag("#loc.kerbalsports.fishing.tutorial").Replace("\\n", "\n");
+        static string ctrlText = Localizer.GetStringByTag("#loc.kerbalsports.fishing.ctrl-ui");
+        static string skillText = Localizer.GetStringByTag("#loc.kerbalsports.fishing.skill-ui");
+        static string castText = Localizer.GetStringByTag("#loc.kerbalsports.fishing.cast-msg");
+        static string gotawayText = Localizer.GetStringByTag("#loc.kerbalsports.fishing.got-away");
+        static string caughtText = Localizer.GetStringByTag("#loc.kerbalsports.fishing.caught-fish");
+        static string rewardText = Localizer.GetStringByTag("#loc.kerbalsports.fishing.reward");
 
         void Awake()
         {
@@ -289,8 +296,8 @@ namespace KerbalSports.Fishing
                     Rect ctrl2Rect = new Rect(displayRight - ctrlWidth, Screen.height - 32f - 64f - 8.0f, ctrlWidth, 48f);
                     Graphics.DrawTexture(ctrl1Rect, windowTex, 6, 6, 6, 6);
                     Graphics.DrawTexture(ctrl2Rect, windowTex, 6, 6, 6, 6);
-                    GUI.Label(ctrl1Rect, "CTRL", ctrlTextStyle);
-                    GUI.Label(ctrl2Rect, "CTRL", ctrlTextStyle);
+                    GUI.Label(ctrl1Rect, ctrlText, ctrlTextStyle);
+                    GUI.Label(ctrl2Rect, ctrlText, ctrlTextStyle);
 
                     // Draw the distance meter
                     Rect distanceRect = new Rect(displayLeft + 16f, distanceTop, 32f, distanceHeight);
@@ -300,7 +307,7 @@ namespace KerbalSports.Fishing
                     Rect skillRect = new Rect(displayRight - 48f, distanceTop, 32f, distanceHeight);
                     Graphics.DrawTexture(skillRect, windowTex, 6, 6, 6, 6);
                     Rect skillTextRect = new Rect(displayRight - 64f, distanceTop + distanceHeight, 64f, 10f);
-                    GUI.Label(skillTextRect, "SKILL", smallTextStyle);
+                    GUI.Label(skillTextRect, skillText, smallTextStyle);
 
                     // Draw the actual skill meter
                     float skillHeight = (float) fishingData.skill / maxSkill * (distanceHeight - 10f);
@@ -316,7 +323,7 @@ namespace KerbalSports.Fishing
                         {
                             // Draw the hint text
                             Rect spaceCastRect = new Rect(displayCenter - 256f, Screen.height - 32f - 64f - 16.0f, 512f, 64f);
-                            GUI.Label(spaceCastRect, "Press SPACE to cast!", bigTextStyle);
+                            GUI.Label(spaceCastRect, castText, bigTextStyle);
                         }
                     }
 
@@ -594,7 +601,7 @@ namespace KerbalSports.Fishing
                         GenericDialog caughtDialog = gameObject.AddComponent<GenericDialog>();
                         caughtDialog.instructorName = "Strategy_MechanicGuy";
                         caughtDialog.animation = GenericDialog.Animation.false_disappointed;
-                        caughtDialog.text = "Looks like the fish got away this time...";
+                        caughtDialog.text = gotawayText;
 
                         fishingData.IncreaseSkill(missedSkillIncrease);
                         SetState(FishingState.Idle);
@@ -604,12 +611,12 @@ namespace KerbalSports.Fishing
                         GenericDialog caughtDialog = gameObject.AddComponent<GenericDialog>();
                         caughtDialog.instructorName = "Strategy_MechanicGuy";
                         caughtDialog.animation = GenericDialog.Animation.true_thumbsUp;
-                        caughtDialog.text = "Great job, you caught a " + currentFish.weight.ToString("N1") + " kg fish!";
+                        caughtDialog.text = Localizer.Format(caughtText, currentFish.weight.ToString("N1"));
 
                         if (Funding.Instance != null)
                         {
                             Funding.Instance.AddFunds(currentFish.funds, TransactionReasons.Strategies);
-                            caughtDialog.text += "\n\nReward: <color=#B4D455>√ " + currentFish.funds.ToString("N0") + "</color>";
+                            caughtDialog.text += StringBuilderCache.Format("\n\n{0} <color=#B4D455>√ {1}</color>", rewardText, currentFish.funds.ToString("N0"));
                         }
 
                         SetState(FishingState.Caught);

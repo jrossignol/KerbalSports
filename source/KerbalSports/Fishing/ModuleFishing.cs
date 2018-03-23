@@ -5,16 +5,17 @@ using System.Reflection;
 using System.Text;
 using UnityEngine;
 using KSP;
+using KSP.Localization;
 
 namespace KerbalSports.Fishing
 {
     public class ModuleFishing : PartModule
     {
-        [KSPField(guiName="Type of Fish in Region", guiActive=true)]
+        [KSPField(guiName = "#loc.kerbalsports.fishing.fish-type", guiActive=true)]
         string fishType;
-        [KSPField(guiName = "Biggest Fish Caught", guiActive = true, guiFormat = "N1", guiUnits = "kg")]
+        [KSPField(guiName = "#loc.kerbalsports.fishing.biggest-fish", guiActive = true, guiFormat = "N1", guiUnits = "kg")]
         public double fishRecord = 0.0;
-        [KSPField(guiName = "Number of Fish Caught", guiActive = true, guiFormat = "N0")]
+        [KSPField(guiName = "#loc.kerbalsports.fishing.number-of-fish", guiActive = true, guiFormat = "N0")]
         public int fishCount = 0;
         ProtoCrewMember pcm;
         bool showing = true;
@@ -26,7 +27,7 @@ namespace KerbalSports.Fishing
             pcm = part.protoModuleCrew.First();
         }
 
-        [KSPEvent(active = true, guiActive = true, guiName = "Start Fishing", name = "StartFishing")]
+        [KSPEvent(active = true, guiActive = true, guiName = "#loc.kerbalsports.fishing.start-fishing", name = "StartFishing")]
         void StartFishing()
         {
             FishingDriver fishingDriver = PlanetariumCamera.Camera.gameObject.GetComponent<FishingDriver>();
@@ -69,7 +70,7 @@ namespace KerbalSports.Fishing
 
                     // Set the fish type found at the current location
                     Fish.FishType ft = Fish.GetFishType(vessel.mainBody, vessel.latitude, vessel.longitude);
-                    fishType = ft == Fish.FishType.DeepOcean ? "Deep Ocean" : ft.ToString();
+                    fishType = ft.Name();
                 }
                 else
                 {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using KSP.Localization;
 
 namespace KerbalSports.Fishing
 {
@@ -142,6 +143,36 @@ namespace KerbalSports.Fishing
                     return FishType.Kraken;
                 }
             }
+        }
+    }
+
+    public static class FishTypeExt
+    {
+        static string pond = Localizer.GetStringByTag("#loc.kerbalsports.fishing.fish-type-pond");
+        static string freshwater = Localizer.GetStringByTag("#loc.kerbalsports.fishing.fish-type-freshwater");
+        static string coastal = Localizer.GetStringByTag("#loc.kerbalsports.fishing.fish-type-coastal");
+        static string ocean = Localizer.GetStringByTag("#loc.kerbalsports.fishing.fish-type-ocean");
+        static string deepOcean = Localizer.GetStringByTag("#loc.kerbalsports.fishing.fish-type-deep-ocean");
+        static string kraken = Localizer.GetStringByTag("#loc.kerbalsports.fishing.fish-type-kraken");
+
+        public static string Name(this Fish.FishType fishType)
+        {
+            switch (fishType)
+            {
+                case Fish.FishType.Coastal:
+                    return coastal;
+                case Fish.FishType.DeepOcean:
+                    return deepOcean;
+                case Fish.FishType.Freshwater:
+                    return freshwater;
+                case Fish.FishType.Kraken:
+                    return kraken;
+                case Fish.FishType.Ocean:
+                    return ocean;
+                case Fish.FishType.Pond:
+                    return pond;
+            }
+            return "Unhandled Fish!";
         }
     }
 }
