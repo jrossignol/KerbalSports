@@ -58,7 +58,7 @@ namespace KerbalSports.Fishing
                 // Check 5 meters forward for water
                 Vector3 checkPosition = vessel.transform.localPosition + vessel.transform.forward * 5.0f;
                 double latitude = vessel.mainBody.GetLatitude(checkPosition);
-                double longitude = vessel.mainBody.GetLongitude(checkPosition);
+                double longitude = (vessel.mainBody.GetLongitude(checkPosition) + 360) % 360;
                 double height = Util.TerrainHeight(vessel.mainBody, latitude, longitude);
 
                 int adminLevel = (int)Math.Round(ScenarioUpgradeableFacilities.GetFacilityLevel(SpaceCenterFacility.Administration) *
