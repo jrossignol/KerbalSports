@@ -632,9 +632,13 @@ namespace KerbalSports.Fishing
         {
         }
 
+        static FieldInfo x_startTimer_FieldInfo = typeof(KerbalEVA).GetField("startTimer", BindingFlags.Instance | BindingFlags.NonPublic);
+
         void SetState(FishingState newState)
         {
             Debug.Log("set fishing state to " + newState);
+
+            KerbalEVA eva = evaVessel.GetComponent<KerbalEVA>();
 
             // Remove any looping clips
             loopingClipName = null;
@@ -652,10 +656,14 @@ namespace KerbalSports.Fishing
                 {
                     NavBallToggle.Instance.panel.Collapse();
                 }
+
+                x_startTimer_FieldInfo.SetValue(eva, false);
             }
             // Undo what we did
             else if (newState == FishingState.NotFishing)
             {
+                x_startTimer_FieldInfo.SetValue(eva, true);
+
                 // Clear the locks
                 InputLockManager.RemoveControlLock("Fishing");
 
@@ -671,7 +679,6 @@ namespace KerbalSports.Fishing
                 if (evaVessel != null)
                 {
                     // Set the animation back to the idle one
-                    KerbalEVA eva = evaVessel.GetComponent<KerbalEVA>();
                     animation.Stop();
                     animation.Play(eva.Animations.idle.animationName);
 
@@ -714,7 +721,6 @@ namespace KerbalSports.Fishing
             // Play the idle animation
             if (newState == FishingState.Idle)
             {
-                KerbalEVA eva = evaVessel.GetComponent<KerbalEVA>();
                 animation.Stop();
                 animation.Play(eva.Animations.idle.animationName);
             }
